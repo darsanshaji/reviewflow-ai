@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { 
   Star, LayoutDashboard, MessageSquare, QrCode, Users, 
   CreditCard, Settings, ClipboardList, Activity, LogOut,
-  BarChart3
+  BarChart3, ShieldAlert
 } from "lucide-react";
 
 interface SidebarProps {
@@ -99,6 +99,19 @@ export default function Sidebar({ tenantName, roleName, userRoleId }: SidebarPro
                 <ClipboardList className="h-4 w-4" />
                 Security Audit Logs
               </Link>
+              {userRoleId === 1 && (
+                <Link 
+                  href="/dashboard/super-admin" 
+                  className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition ${
+                    pathname === "/dashboard/super-admin" 
+                      ? "bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 font-bold" 
+                      : "text-slate-600 dark:text-slate-450 hover:bg-slate-50 dark:hover:bg-slate-800"
+                  }`}
+                >
+                  <ShieldAlert className="h-4 w-4 text-red-500" />
+                  Super Admin Panel
+                </Link>
+              )}
             </>
           )}
         </div>

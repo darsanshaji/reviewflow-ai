@@ -100,6 +100,19 @@ export default function DashboardOverviewPage() {
 
         const tenantId = userProfile.tenant_id;
 
+        // Log access audit log event
+        try {
+          await supabase.from("audit_logs").insert({
+            tenant_id: tenantId,
+            user_id: session.user.id,
+            action: "dashboard_access",
+            ip_address: "127.0.0.1",
+            metadata: { path: "/dashboard", device: navigator.userAgent }
+          });
+        } catch (e) {
+          console.error("Failed to write audit log:", e);
+        }
+
         if (!tenantId) {
           router.push("/dashboard/setup");
           return;
@@ -164,6 +177,24 @@ export default function DashboardOverviewPage() {
 
       } catch (err: any) {
         setErrorMsg(err.message || "Failed to load dashboard metrics.");
+        
+        // Log system error audit log event
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          await supabase.from("audit_logs").insert({
+            tenant_id: profile?.tenant_id || null,
+            user_id: session?.user?.id || null,
+            action: "system_error",
+            ip_address: "127.0.0.1",
+            metadata: { 
+              message: err.message || "Dashboard metrics failure", 
+              path: "/dashboard",
+              component: "DashboardOverview"
+            }
+          });
+        } catch (e) {
+          console.error("Failed to write system error audit log:", e);
+        }
       } finally {
         setLoading(false);
       }
