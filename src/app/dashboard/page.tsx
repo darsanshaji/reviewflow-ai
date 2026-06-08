@@ -80,7 +80,7 @@ export default function DashboardOverviewPage() {
         }
 
         // Retrieve user profile details
-        const { data: userProfile, error: profileErr } = await supabase
+        const { data: userProfile, error: profileErr } = (await supabase
           .from("users")
           .select(`
             name,
@@ -90,7 +90,7 @@ export default function DashboardOverviewPage() {
             tenants ( name )
           `)
           .eq("id", session.user.id)
-          .single();
+          .single()) as any;
 
         if (profileErr || !userProfile) throw profileErr || new Error("Profile not found");
 

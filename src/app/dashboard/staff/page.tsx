@@ -61,11 +61,11 @@ export default function StaffManagerPage() {
         setUserId(session.user.id);
 
         // Fetch User profile to get role and tenant context
-        const { data: profile, error: profileErr } = await supabase
+        const { data: profile, error: profileErr } = (await supabase
           .from("users")
           .select("tenant_id, role_id, tenants(name)")
           .eq("id", session.user.id)
-          .single();
+          .single()) as any;
 
         if (profileErr || !profile) throw profileErr || new Error("Profile context not found");
 
@@ -184,7 +184,7 @@ export default function StaffManagerPage() {
       if (error) throw error;
 
       const newRecord: StaffRecord = {
-        ...newStaff,
+        ...(newStaff as any),
         avgRating: 0.0,
         totalFeedback: 0,
         reviewsGenerated: 0

@@ -15,7 +15,7 @@ const LIMIT_WINDOW_MS = 60 * 1000;
 const MAX_REQUESTS = 60;
 
 export function isRateLimited(ipAddress: string): { limited: boolean; remaining: number; reset: number } {
-  const now = Date.getTime ? Date.getTime() : new Date().getTime();
+  const now = Date.now();
   let entry = registry.get(ipAddress);
 
   if (!entry || now > entry.resetTime) {

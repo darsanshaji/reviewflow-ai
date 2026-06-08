@@ -75,11 +75,11 @@ export default function SettingsPage() {
           return;
         }
 
-        const { data: profile } = await supabase
+        const { data: profile } = (await supabase
           .from("users")
           .select("tenant_id, role_id, roles(name), tenants(name)")
           .eq("id", session.user.id)
-          .single();
+          .single()) as any;
 
         if (!profile?.tenant_id) {
           setErrorMsg("Account tenant configuration missing.");

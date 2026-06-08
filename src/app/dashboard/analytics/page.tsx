@@ -57,11 +57,11 @@ export default function AnalyticsDashboardPage() {
           return;
         }
 
-        const { data: profile } = await supabase
+        const { data: profile } = (await supabase
           .from("users")
           .select("tenant_id, role_id, roles(name), tenants(name)")
           .eq("id", session.user.id)
-          .single();
+          .single()) as any;
 
         if (!profile?.tenant_id) {
           setErrorMsg("Tenant profile context missing.");
@@ -193,7 +193,7 @@ export default function AnalyticsDashboardPage() {
             <div>
               <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Review Redirect Rate</h3>
               <p className="text-3xl font-extrabold mt-2 text-blue-600 dark:text-blue-400">{reviewConvRate}%</p>
-              <span className="text-[10px] text-slate-400 mt-1 block">Rating opens -> Google Clicks</span>
+              <span className="text-[10px] text-slate-400 mt-1 block">Rating opens &rarr; Google Clicks</span>
             </div>
             <ArrowUpRight className="h-8 w-8 text-blue-100 dark:text-blue-900" />
           </div>
@@ -202,7 +202,7 @@ export default function AnalyticsDashboardPage() {
             <div>
               <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Campaign Conv. Rate</h3>
               <p className="text-3xl font-extrabold mt-2 text-green-600 dark:text-green-400">{campaignConvRate}%</p>
-              <span className="text-[10px] text-slate-400 mt-1 block">Messages sent -> feedback entries</span>
+              <span className="text-[10px] text-slate-400 mt-1 block">Messages sent &rarr; feedback entries</span>
             </div>
             <ArrowUpRight className="h-8 w-8 text-green-100 dark:text-green-900" />
           </div>
@@ -211,7 +211,7 @@ export default function AnalyticsDashboardPage() {
             <div>
               <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">QR Scan Conv. Rate</h3>
               <p className="text-3xl font-extrabold mt-2 text-indigo-600 dark:text-indigo-400">{qrConvRate}%</p>
-              <span className="text-[10px] text-slate-400 mt-1 block">QR scans -> reviews submitted</span>
+              <span className="text-[10px] text-slate-400 mt-1 block">QR scans &rarr; reviews submitted</span>
             </div>
             <ArrowUpRight className="h-8 w-8 text-indigo-100 dark:text-indigo-900" />
           </div>

@@ -6,7 +6,8 @@ import { createClient } from "@/lib/supabase/client";
 import { 
   Sparkles, Loader2, Star, CheckCircle2, AlertTriangle, 
   Brain, BarChart3, TrendingUp, MessageCircle, RefreshCcw,
-  LayoutDashboard, QrCode, MessageSquare, ClipboardList
+  LayoutDashboard, QrCode, MessageSquare, ClipboardList,
+  AlertCircle
 } from "lucide-react";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
@@ -211,11 +212,11 @@ export default function AIInsightsPage() {
           return;
         }
 
-        const { data: profile } = await supabase
+        const { data: profile } = (await supabase
           .from("users")
           .select("tenant_id, role_id, roles(name), tenants(name)")
           .eq("id", session.user.id)
-          .single();
+          .single()) as any;
 
         if (!profile?.tenant_id) {
           setErrorMsg("Tenant profile context missing.");
