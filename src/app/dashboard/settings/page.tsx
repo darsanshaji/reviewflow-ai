@@ -503,16 +503,26 @@ export default function SettingsPage() {
                       <h3 className="font-extrabold text-sm text-slate-800 dark:text-slate-200">{b.name}</h3>
                       {b.address && <p className="text-xs text-slate-500 flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {b.address}</p>}
                       {b.phone && <p className="text-xs text-slate-500 flex items-center gap-1"><Phone className="h-3.5 w-3.5" /> {b.phone}</p>}
-                      {b.google_review_url && (
+                      <div className="flex flex-col gap-1 mt-1">
+                        {b.google_review_url && (
+                          <a 
+                            href={b.google_review_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="text-[10px] text-slate-500 dark:text-slate-400 hover:underline block truncate max-w-xs"
+                          >
+                            <span className="font-bold text-slate-600 dark:text-slate-300">Google Link:</span> {b.google_review_url}
+                          </a>
+                        )}
                         <a 
-                          href={b.google_review_url} 
+                          href={`/review/${b.id}`} 
                           target="_blank" 
                           rel="noopener noreferrer" 
-                          className="text-[10px] text-blue-600 hover:underline block truncate max-w-xs"
+                          className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline block truncate max-w-xs"
                         >
-                          Google Link: {b.google_review_url}
+                          <span className="font-bold">Review Funnel URL:</span> {typeof window !== "undefined" ? window.location.origin : ""}/review/{b.id}
                         </a>
-                      )}
+                      </div>
                     </div>
                     <button
                       type="button"
