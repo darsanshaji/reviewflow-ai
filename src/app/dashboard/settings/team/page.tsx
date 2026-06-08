@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { 
   Users, UserPlus, Trash2, Mail, Shield, ChevronRight, 
-  Loader2, AlertCircle, CheckCircle, ArrowLeft, Copy, Check, Clock
+  Loader2, AlertCircle, CheckCircle, ArrowLeft, Copy, Check, Clock, Sparkles
 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 
