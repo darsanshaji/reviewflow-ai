@@ -7,7 +7,7 @@ import {
   Settings, Save, Globe, Palette, Sparkles, Building, 
   Mail, Image as ImageIcon, Loader2, Star, CheckCircle, 
   AlertCircle, LayoutDashboard, QrCode, MessageSquare, Users,
-  Plus, Trash2, MapPin, Phone
+  Plus, Trash2, MapPin, Phone, Upload
 } from "lucide-react";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
@@ -23,6 +23,9 @@ interface SettingsRecord {
     sender_name?: string;
     sender_email?: string;
     footer_text?: string;
+    funnel_heading?: string;
+    funnel_subheading?: string;
+    funnel_emojis?: Array<{ rating: number; emoji: string; label: string }>;
   } | null;
 }
 
@@ -62,6 +65,22 @@ export default function SettingsPage() {
   const [emailSenderName, setEmailSenderName] = useState("");
   const [emailSenderEmail, setEmailSenderEmail] = useState("");
   const [emailFooterText, setEmailFooterText] = useState("");
+
+  // Customizable Funnel Branding
+  const [funnelHeading, setFunnelHeading] = useState("How was your experience today?");
+  const [funnelSubheading, setFunnelSubheading] = useState("Your feedback helps us provide better service.");
+  const [funnelEmojis, setFunnelEmojis] = useState<Array<{ rating: number; emoji: string; label: string }>>([
+    { rating: 1, emoji: "😡", label: "Poor" },
+    { rating: 2, emoji: "🙁", label: "Fair" },
+    { rating: 3, emoji: "🙂", label: "Good" },
+    { rating: 4, emoji: "😊", label: "Great" },
+    { rating: 5, emoji: "😍", label: "Outstanding" },
+  ]);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+
+  // Live Funnel Mockup Simulator States
+  const [previewState, setPreviewState] = useState<"rating" | "low_feedback" | "high_thankyou" | "submitted">("rating");
+  const [previewRating, setPreviewRating] = useState<number | null>(null);
 
   // Domain Verification simulation state
   const [dnsVerified, setDnsVerified] = useState(false);
@@ -144,6 +163,9 @@ export default function SettingsPage() {
             if (eb.sender_name) setEmailSenderName(eb.sender_name);
             if (eb.sender_email) setEmailSenderEmail(eb.sender_email);
             if (eb.footer_text) setEmailFooterText(eb.footer_text);
+            if (eb.funnel_heading) setFunnelHeading(eb.funnel_heading);
+            if (eb.funnel_subheading) setFunnelSubheading(eb.funnel_subheading);
+            if (eb.funnel_emojis) setFunnelEmojis(eb.funnel_emojis);
           }
         }
       } catch (err) {
@@ -175,7 +197,10 @@ export default function SettingsPage() {
         email_branding: {
           sender_name: emailSenderName,
           sender_email: emailSenderEmail,
-          footer_text: emailFooterText
+          footer_text: emailFooterText,
+          funnel_heading: funnelHeading,
+          funnel_subheading: funnelSubheading,
+          funnel_emojis: funnelEmojis
         }
       };
 
@@ -221,6 +246,47 @@ export default function SettingsPage() {
       setErrorMsg(err.message || "Failed to save white label configurations.");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleLogoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !tenantId) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert("File size exceeds 2MB limit.");
+      return;
+    }
+
+    setUploadingLogo(true);
+    setErrorMsg("");
+    setSuccessMsg("");
+
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `logos/${tenantId}-${Date.now()}.${fileExt}`;
+
+      const { data, error } = await supabase.storage
+        .from("logos")
+        .upload(fileName, file, {
+          cacheControl: "3600",
+          upsert: true,
+        });
+
+      if (error) throw error;
+
+      const { data: publicUrlData } = supabase.storage
+        .from("logos")
+        .getPublicUrl(fileName);
+
+      if (publicUrlData?.publicUrl) {
+        setLogoUrl(publicUrlData.publicUrl);
+        setSuccessMsg("Logo uploaded successfully. Remember to save brand configuration!");
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || "Failed to upload logo image. Make sure the 'logos' storage bucket exists in your Supabase project.");
+    } finally {
+      setUploadingLogo(false);
     }
   };
 
@@ -331,14 +397,55 @@ export default function SettingsPage() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="sm:col-span-2 space-y-1">
-                  <label className="text-xs font-semibold text-slate-500 uppercase">Brand Logo Link</label>
-                  <input
-                    type="url"
-                    placeholder="https://yourdomain.com/logo.png"
-                    value={logoUrl}
-                    onChange={(e) => setLogoUrl(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-sm focus:outline-none"
-                  />
+                  <label className="text-xs font-semibold text-slate-500 uppercase">Brand Logo</label>
+                  <div className="flex flex-col sm:flex-row items-center gap-4 p-4 border rounded-lg bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800">
+                    {logoUrl ? (
+                      <div className="relative h-16 w-16 bg-white border rounded-lg p-2 flex items-center justify-center shrink-0">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={logoUrl} alt="Logo" className="h-full w-full object-contain" />
+                        <button
+                          type="button"
+                          onClick={() => setLogoUrl("")}
+                          className="absolute -top-1.5 -right-1.5 bg-red-100 hover:bg-red-200 text-red-600 rounded-full p-1 transition"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="h-16 w-16 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg flex items-center justify-center text-slate-400 shrink-0">
+                        <ImageIcon className="h-6 w-6" />
+                      </div>
+                    )}
+                    
+                    <div className="flex-1 w-full space-y-2">
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                        {/* File Upload Button */}
+                        <label className="flex-1 flex items-center justify-center gap-2 px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold rounded-lg text-xs cursor-pointer transition">
+                          <Upload className="h-4 w-4 text-slate-400" />
+                          <span>{uploadingLogo ? "Uploading..." : "Upload Logo Image"}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleLogoFileChange}
+                            disabled={uploadingLogo}
+                            className="hidden"
+                          />
+                        </label>
+                        
+                        <div className="text-center py-1 text-slate-400 text-xs font-medium shrink-0">or</div>
+                        
+                        {/* URL input */}
+                        <input
+                          type="url"
+                          placeholder="Paste logo image URL"
+                          value={logoUrl}
+                          onChange={(e) => setLogoUrl(e.target.value)}
+                          className="flex-[2] px-3 py-2 border rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-xs focus:outline-none"
+                        />
+                      </div>
+                      <p className="text-[10px] text-slate-400">Supported formats: PNG, JPG, GIF, SVG. Max size 2MB.</p>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="space-y-1">
@@ -386,6 +493,84 @@ export default function SettingsPage() {
                     onChange={(e) => setFaviconUrl(e.target.value)}
                     className="w-full px-3 py-2 border rounded-lg bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-sm focus:outline-none"
                   />
+                </div>
+              </div>
+            </div>
+
+            {/* REVIEW FUNNEL CUSTOMIZATION SECTION */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm space-y-4">
+              <h2 className="font-bold text-lg border-b pb-2 flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-blue-600" />
+                Review Funnel Customization
+              </h2>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="sm:col-span-2 space-y-1">
+                  <label className="text-xs font-semibold text-slate-500 uppercase">Funnel Heading Text</label>
+                  <input
+                    type="text"
+                    value={funnelHeading}
+                    onChange={(e) => setFunnelHeading(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-lg bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-sm focus:outline-none"
+                    placeholder="e.g. How was your experience today?"
+                  />
+                </div>
+
+                <div className="sm:col-span-2 space-y-1">
+                  <label className="text-xs font-semibold text-slate-500 uppercase">Funnel Subheading Text</label>
+                  <input
+                    type="text"
+                    value={funnelSubheading}
+                    onChange={(e) => setFunnelSubheading(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-lg bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-sm focus:outline-none"
+                    placeholder="e.g. Your feedback helps us provide better service."
+                  />
+                </div>
+
+                <div className="sm:col-span-2 space-y-3 pt-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase block border-b pb-1 dark:border-slate-800">
+                    Emoji Scale Ratings (1 - 5 stars)
+                  </label>
+                  
+                  <div className="space-y-3">
+                    {funnelEmojis.map((item, idx) => (
+                      <div key={item.rating} className="flex items-center gap-4 p-3 border rounded-lg bg-slate-50/50 dark:bg-slate-950/30 border-slate-100 dark:border-slate-800/80">
+                        <span className="text-sm font-bold text-slate-400 dark:text-slate-500 shrink-0 w-16">
+                          Rating {item.rating}
+                        </span>
+                        
+                        <div className="w-16 space-y-1">
+                          <label className="text-[10px] font-semibold text-slate-400 uppercase">Emoji</label>
+                          <input
+                            type="text"
+                            maxLength={2}
+                            value={item.emoji}
+                            onChange={(e) => {
+                              const newEmojis = [...funnelEmojis];
+                              newEmojis[idx].emoji = e.target.value;
+                              setFunnelEmojis(newEmojis);
+                            }}
+                            className="w-full text-center px-2 py-1.5 border rounded bg-white dark:bg-slate-900 border-slate-200 text-base focus:outline-none"
+                          />
+                        </div>
+
+                        <div className="flex-1 space-y-1">
+                          <label className="text-[10px] font-semibold text-slate-400 uppercase">Text Label</label>
+                          <input
+                            type="text"
+                            value={item.label}
+                            onChange={(e) => {
+                              const newEmojis = [...funnelEmojis];
+                              newEmojis[idx].label = e.target.value;
+                              setFunnelEmojis(newEmojis);
+                            }}
+                            className="w-full px-3 py-1.5 border rounded bg-white dark:bg-slate-900 border-slate-200 text-xs focus:outline-none"
+                            placeholder="e.g. Good"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -641,10 +826,10 @@ export default function SettingsPage() {
                 Live Funnel Mockup Preview
               </h3>
 
-              <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md bg-slate-50 dark:bg-slate-950 flex flex-col h-[280px]">
+              <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-md bg-slate-50 dark:bg-slate-950 flex flex-col h-[320px]">
                 {/* Header Mockup */}
-                <div className="h-10 px-3 bg-white dark:bg-slate-900 border-b flex items-center justify-center shadow-sm shrink-0">
-                  <div className="flex items-center gap-1.5">
+                <div className="h-10 px-3 bg-white dark:bg-slate-900 border-b flex items-center justify-between shadow-sm shrink-0">
+                  <div className="flex items-center gap-1.5 bg-transparent">
                     {logoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={logoUrl} alt="Logo" className="h-5 w-auto object-contain" />
@@ -653,33 +838,109 @@ export default function SettingsPage() {
                         {tenantName.charAt(0)}
                       </div>
                     )}
-                    <span className="font-extrabold text-xs">{tenantName}</span>
+                    <span className="font-extrabold text-[10px] truncate max-w-[100px]">{tenantName}</span>
                   </div>
+                  
+                  {previewState !== "rating" && (
+                    <button
+                      type="button"
+                      onClick={() => setPreviewState("rating")}
+                      className="text-[9px] text-blue-600 hover:text-blue-700 font-bold flex items-center gap-0.5"
+                    >
+                      Reset Sim
+                    </button>
+                  )}
                 </div>
 
                 {/* Funnel Body Mockup */}
-                <div className="flex-1 flex flex-col items-center justify-center p-4 text-center space-y-4">
-                  <span className="text-xs font-extrabold">How was your experience today?</span>
-                  
-                  {/* Mock ratings */}
-                  <div className="flex gap-2">
-                    {["😡", "🙁", "🙂", "😊", "😍"].map((emoji, idx) => (
-                      <span 
-                        key={idx} 
-                        className={`text-xl p-1.5 rounded-lg border bg-white dark:bg-slate-900 ${idx >= 3 ? 'border-yellow-300' : 'border-slate-100 dark:border-slate-800'}`}
-                      >
-                        {emoji}
+                <div className="flex-1 flex flex-col items-center justify-center p-4 text-center overflow-y-auto bg-transparent">
+                  {previewState === "rating" && (
+                    <div className="space-y-3 w-full bg-transparent">
+                      <span className="text-xs font-extrabold block leading-tight">
+                        {funnelHeading || "How was your experience today?"}
                       </span>
-                    ))}
-                  </div>
+                      <p className="text-[9px] text-slate-500 dark:text-slate-400 max-w-[200px] mx-auto leading-tight block">
+                        {funnelSubheading || "Your feedback helps us provide better service."}
+                      </p>
+                      
+                      {/* Interactive Ratings */}
+                      <div className="flex gap-1.5 justify-center flex-wrap bg-transparent">
+                        {funnelEmojis.map((item, idx) => (
+                          <div key={item.rating} className="flex flex-col items-center gap-0.5 bg-transparent">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPreviewRating(item.rating);
+                                if (item.rating <= 3) {
+                                  setPreviewState("low_feedback");
+                                } else {
+                                  setPreviewState("high_thankyou");
+                                }
+                              }}
+                              className={`text-lg p-1.5 rounded-lg border bg-white dark:bg-slate-900 transition hover:scale-110 active:scale-95 cursor-pointer ${idx >= 3 ? 'border-yellow-300' : 'border-slate-100 dark:border-slate-800'}`}
+                              title={item.label}
+                            >
+                              {item.emoji}
+                            </button>
+                            <span className="text-[8px] text-slate-400 font-medium truncate max-w-[38px]">
+                              {item.label}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
-                  <button
-                    type="button"
-                    style={{ backgroundColor: primaryColor }}
-                    className="w-full text-[10px] font-bold text-white py-2 rounded-lg transition"
-                  >
-                    Submit Feedback
-                  </button>
+                  {previewState === "low_feedback" && (
+                    <div className="space-y-3 w-full text-left bg-transparent">
+                      <div className="border-b pb-1 text-center bg-transparent">
+                        <h4 className="text-[10px] font-bold">We appreciate your feedback</h4>
+                        <p className="text-[8px] text-slate-500">What disappointed you today?</p>
+                      </div>
+                      
+                      <div className="space-y-1 bg-transparent">
+                        <label className="text-[7px] font-bold text-slate-400 uppercase">Select Reasons</label>
+                        <div className="grid grid-cols-2 gap-1 text-[8px] bg-transparent">
+                          <span className="p-1 border rounded bg-white text-slate-600 block">Waiting Time</span>
+                          <span className="p-1 border rounded bg-white text-slate-600 block">Service Quality</span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setPreviewState("submitted")}
+                        style={{ backgroundColor: primaryColor }}
+                        className="w-full text-[9px] font-bold text-white py-1.5 rounded-lg transition"
+                      >
+                        Submit Private Feedback
+                      </button>
+                    </div>
+                  )}
+
+                  {previewState === "high_thankyou" && (
+                    <div className="space-y-3 w-full text-center bg-transparent">
+                      <div className="text-2xl">🎉</div>
+                      <h4 className="text-[10px] font-bold">Thank you for your review!</h4>
+                      <p className="text-[8px] text-slate-500">We would love it if you shared your experience publicly on Google.</p>
+                      
+                      <button
+                        type="button"
+                        onClick={() => setPreviewState("submitted")}
+                        style={{ backgroundColor: primaryColor }}
+                        className="w-full text-[9px] font-bold text-white py-1.5 rounded-lg transition flex items-center justify-center gap-1"
+                      >
+                        <span>Leave a Review on Google</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {previewState === "submitted" && (
+                    <div className="space-y-2 w-full text-center py-4 bg-transparent">
+                      <div className="text-3xl text-green-500">✓</div>
+                      <h4 className="text-[10px] font-bold">Thank You!</h4>
+                      <p className="text-[8px] text-slate-500">Your feedback has been successfully processed.</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

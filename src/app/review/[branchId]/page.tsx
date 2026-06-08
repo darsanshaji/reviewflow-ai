@@ -39,6 +39,17 @@ export default function ReviewFunnelPage() {
   const [secondaryColor, setSecondaryColor] = useState("#475569");
   const [logoUrl, setLogoUrl] = useState("");
 
+  // Customizable Funnel Branding
+  const [funnelHeading, setFunnelHeading] = useState("How was your experience today?");
+  const [funnelSubheading, setFunnelSubheading] = useState("Your feedback helps us provide better service.");
+  const [funnelEmojis, setFunnelEmojis] = useState<Array<{ rating: number; emoji: string; label: string }>>([
+    { rating: 1, emoji: "😡", label: "Poor" },
+    { rating: 2, emoji: "🙁", label: "Fair" },
+    { rating: 3, emoji: "🙂", label: "Good" },
+    { rating: 4, emoji: "😊", label: "Great" },
+    { rating: 5, emoji: "😍", label: "Outstanding" },
+  ]);
+
   // Funnel Flow State
   const [funnelState, setFunnelState] = useState<FunnelState>("rating");
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
@@ -123,6 +134,34 @@ export default function ReviewFunnelPage() {
           if (bizData?.brand_colors?.primary) setPrimaryColor(bizData.brand_colors.primary);
           if (bizData?.brand_colors?.secondary) setSecondaryColor(bizData.brand_colors.secondary);
           if (bizData?.logo_url) setLogoUrl(bizData.logo_url);
+
+          // Fetch Settings
+          const { data: settingsData } = await supabase
+            .from("settings")
+            .select("*")
+            .eq("tenant_id", data.tenant_id)
+            .single();
+
+          if (settingsData) {
+            if (settingsData.brand_logo) setLogoUrl(settingsData.brand_logo);
+            if (settingsData.primary_color) setPrimaryColor(settingsData.primary_color);
+            if (settingsData.secondary_color) setSecondaryColor(settingsData.secondary_color);
+            if (settingsData.favicon_url) {
+              let link: HTMLLinkElement | null = document.querySelector("link[rel*='icon']");
+              if (!link) {
+                link = document.createElement('link');
+                link.rel = 'icon';
+                document.head.appendChild(link);
+              }
+              link.href = settingsData.favicon_url;
+            }
+            if (settingsData.email_branding) {
+              const eb = settingsData.email_branding as any;
+              if (eb.funnel_heading) setFunnelHeading(eb.funnel_heading);
+              if (eb.funnel_subheading) setFunnelSubheading(eb.funnel_subheading);
+              if (eb.funnel_emojis) setFunnelEmojis(eb.funnel_emojis);
+            }
+          }
 
           // Fetch Staff list for dropdown
           const { data: staffData } = await supabase
@@ -357,26 +396,20 @@ export default function ReviewFunnelPage() {
           {funnelState === "rating" && (
             <div className="space-y-8 text-center">
               <div className="space-y-2">
-                <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight">How was your experience today?</h1>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Your feedback helps us provide better service.</p>
+                <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight">{funnelHeading}</h1>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{funnelSubheading}</p>
               </div>
 
               {/* Emoji Card Grid */}
               <div className="grid grid-cols-5 gap-2 sm:gap-4 justify-center">
-                {[
-                  { rating: 1, emoji: "😡", text: "Poor" },
-                  { rating: 2, emoji: "🙁", text: "Fair" },
-                  { rating: 3, emoji: "🙂", text: "Good" },
-                  { rating: 4, emoji: "😊", text: "Great" },
-                  { rating: 5, emoji: "😍", text: "Outstanding" },
-                ].map((item) => (
+                {funnelEmojis.map((item) => (
                   <button
                     key={item.rating}
                     onClick={() => handleRatingSelect(item.rating)}
                     className="flex flex-col items-center p-2 sm:p-4 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-blue-500 hover:bg-blue-50/10 dark:hover:bg-blue-950/20 hover:scale-105 active:scale-95 transition-all"
                   >
                     <span className="text-3xl sm:text-4xl">{item.emoji}</span>
-                    <span className="text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 mt-2">{item.text}</span>
+                    <span className="text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 mt-2">{item.label}</span>
                   </button>
                 ))}
               </div>
