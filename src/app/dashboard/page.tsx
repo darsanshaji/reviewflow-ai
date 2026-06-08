@@ -94,6 +94,50 @@ export default function DashboardOverviewPage() {
 
         if (profileErr || !userProfile) throw profileErr || new Error("Profile not found");
 
+        // --- NEW INVITE CHECK AND ACCEPTANCE LOGIC ---
+        if (typeof window !== "undefined") {
+          const inviteToken = sessionStorage.getItem("invite_token");
+          if (inviteToken) {
+            const { data: invite } = await supabase
+              .from("invitations")
+              .select("*")
+              .eq("token", inviteToken)
+              .eq("status", "pending")
+              .single();
+
+            if (invite) {
+              const tempTenantId = userProfile.tenant_id;
+
+              const { error: updateProfileErr } = await supabase
+                .from("users")
+                .update({
+                  tenant_id: invite.tenant_id,
+                  role_id: invite.role_id
+                })
+                .eq("id", session.user.id);
+
+              if (!updateProfileErr) {
+                await supabase
+                  .from("invitations")
+                  .update({ status: "accepted" })
+                  .eq("id", invite.id);
+
+                if (tempTenantId) {
+                  await supabase
+                    .from("tenants")
+                    .delete()
+                    .eq("id", tempTenantId);
+                }
+
+                sessionStorage.removeItem("invite_token");
+                window.location.reload();
+                return;
+              }
+            }
+          }
+        }
+        // ---------------------------------------------
+
         setProfile(userProfile);
         setTenantName(userProfile.tenants?.name || "My Business");
         setRoleName(userProfile.roles?.name || "Staff");

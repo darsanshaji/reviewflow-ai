@@ -7,7 +7,7 @@ import {
   Settings, Save, Globe, Palette, Sparkles, Building, 
   Mail, Image as ImageIcon, Loader2, Star, CheckCircle, 
   AlertCircle, LayoutDashboard, QrCode, MessageSquare, Users,
-  Plus, Trash2, MapPin, Phone, Upload
+  Plus, Trash2, MapPin, Phone, Upload, ChevronRight
 } from "lucide-react";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
@@ -572,6 +572,28 @@ export default function SettingsPage() {
                     ))}
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* TEAM & MEMBERS SECTION */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm space-y-4">
+              <h2 className="font-bold text-lg border-b pb-2 flex items-center gap-2">
+                <Users className="h-5 w-5 text-blue-600" />
+                Team & Collaborators
+              </h2>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-transparent">
+                <div className="space-y-1 bg-transparent">
+                  <p className="text-xs text-slate-500">
+                    Invite managers, receptionists, or staff members to collaborate in your organization workspace.
+                  </p>
+                </div>
+                <Link
+                  href="/dashboard/settings/team"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-xs transition shrink-0"
+                >
+                  <span>Manage & Invite Team</span>
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
               </div>
             </div>
 

@@ -28,6 +28,12 @@ function LoginForm() {
     if (error) {
       setErrorMsg(error);
     }
+    const invite = searchParams.get("invite");
+    if (invite) {
+      sessionStorage.setItem("invite_token", invite);
+      setMode("signup");
+      setSuccessMsg("You have been invited to join a company workspace! Sign up below to join your team.");
+    }
   }, [searchParams]);
 
   const handleAuth = async (e: React.FormEvent) => {
