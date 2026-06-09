@@ -78,8 +78,6 @@ export default function PerformanceAnalyticsPage() {
   const [selectedRating, setSelectedRating] = useState<string>("All");
   const [selectedSentiment, setSelectedSentiment] = useState<string>("All");
 
-  // Demo Sandbox State
-  const [demoMode, setDemoMode] = useState<boolean>(false);
 
   // Growth Chart Toggles: "none", "branch", "campaign", "staff"
   const [chartComparison, setChartComparison] = useState<string>("none");
@@ -199,11 +197,6 @@ export default function PerformanceAnalyticsPage() {
         });
         setDbFeedback(mappedFeedback);
 
-        // If real DB has no feedback reviews, default automatically to Sandbox Demo Mode
-        if (mappedFeedback.length === 0) {
-          setDemoMode(true);
-          triggerToast("Entering Sandbox Demo Mode: Loaded rich demonstration analytics.");
-        }
 
       } catch (err) {
         setErrorMsg("Failed to compile analytics aggregations.");
@@ -214,198 +207,13 @@ export default function PerformanceAnalyticsPage() {
     loadAnalyticsData();
   }, [router, supabase]);
 
-  // Construct massive, high-fidelity Sandbox Mock Data
-  const sandboxData = useMemo(() => {
-    const mockBranches = [
-      { id: "sb-b1", name: "Downtown Flagship", address: "101 Main St", google_review_url: "https://google.com" },
-      { id: "sb-b2", name: "Plaza Mall Branch", address: "Suite 400, Plaza Mall", google_review_url: "https://google.com" },
-      { id: "sb-b3", name: "Airport Terminal Lounge", address: "Gate B14 Departure", google_review_url: "https://google.com" }
-    ];
-
-    const mockStaff = [
-      { id: "sb-s1", name: "Emma Watson", branch_id: "sb-b1", role: "Senior Stylist", email: "emma@flow.ai" },
-      { id: "sb-s2", name: "James Smith", branch_id: "sb-b1", role: "Therapist", email: "james@flow.ai" },
-      { id: "sb-s3", name: "Sophia Patel", branch_id: "sb-b2", role: "Senior Stylist", email: "sophia@flow.ai" },
-      { id: "sb-s4", name: "David Miller", branch_id: "sb-b2", role: "Stylist", email: "david@flow.ai" },
-      { id: "sb-s5", name: "Chloe Young", branch_id: "sb-b3", role: "Receptionist", email: "chloe@flow.ai" }
-    ];
-
-    const mockCampaigns = [
-      { id: "sb-c1", name: "Summer Loyalty Blast", type: "WhatsApp", status: "Sent", created_at: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString() },
-      { id: "sb-c2", name: "Post-Service Auto SMS", type: "SMS", status: "Sent", created_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString() },
-      { id: "sb-c3", name: "Feedback Email Campaign", type: "Email", status: "Sent", created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
-      { id: "sb-c4", name: "Spring Re-engagement", type: "WhatsApp", status: "Draft", created_at: new Date().toISOString() }
-    ];
-
-    const mockQrs = [
-      { id: "sb-q1", name: "Front Desk QR", target_type: "Branch", target_id: "sb-b1", branch_id: "sb-b1", staff_id: "sb-s1", created_at: new Date().toISOString() },
-      { id: "sb-q2", name: "Emma Watson Standee QR", target_type: "Staff", target_id: "sb-s1", branch_id: "sb-b1", staff_id: "sb-s1", created_at: new Date().toISOString() },
-      { id: "sb-q3", name: "Plaza Counter QR", target_type: "Branch", target_id: "sb-b2", branch_id: "sb-b2", staff_id: "sb-s3", created_at: new Date().toISOString() },
-      { id: "sb-q4", name: "Table 4 QR Card", target_type: "Branch", target_id: "sb-b3", branch_id: "sb-b3", staff_id: "sb-s5", created_at: new Date().toISOString() }
-    ];
-
-    const mockComments = [
-      { text: "Amazing service! Emma was extremely professional and did a wonderful job.", rating: 5, category: "Staff Behavior", sentiment: "Positive" },
-      { text: "The salon was clean and sanitization practices were excellent.", rating: 5, category: "Cleanliness", sentiment: "Positive" },
-      { text: "Had to wait 20 minutes past my appointment time. Frustrating.", rating: 2, category: "Waiting Time", sentiment: "Negative" },
-      { text: "Great experience, but pricing is a bit high compared to others.", rating: 3, category: "Pricing", sentiment: "Neutral" },
-      { text: "Awesome service quality, love my new hair styling!", rating: 5, category: "Service Quality", sentiment: "Positive" },
-      { text: "The chairs are super comfortable and the coffee was great.", rating: 4, category: "Facilities", sentiment: "Positive" },
-      { text: "Communication about package details was slightly confusing.", rating: 3, category: "Communication", sentiment: "Neutral" },
-      { text: "Average experience, nothing special but no complaints either.", rating: 3, category: "Other", sentiment: "Neutral" },
-      { text: "Staff was polite, but they didn't follow the instructions fully.", rating: 3, category: "Staff Behavior", sentiment: "Neutral" },
-      { text: "Terrible waiting time! I will not return.", rating: 1, category: "Waiting Time", sentiment: "Negative" },
-      { text: "Sophia did an incredible job, highly recommend her!", rating: 5, category: "Staff Behavior", sentiment: "Positive" },
-      { text: "The facilities looked a bit dated and needed dusting.", rating: 2, category: "Facilities", sentiment: "Negative" },
-      { text: "Outstanding quality. Fast styling and super friendly team.", rating: 5, category: "Service Quality", sentiment: "Positive" },
-      { text: "Reasonable cost, prompt styling session, clean tables.", rating: 4, category: "Cleanliness", sentiment: "Positive" }
-    ];
-
-    const cohorts = ["New Customers", "Returning Customers", "VIP Customers", "High Frequency Customers"];
-    const customers = [
-      { name: "Alice Jenkins" }, { name: "Michael Chang" }, { name: "Sarah Connor" },
-      { name: "David Beck" }, { name: "Elena Rostova" }, { name: "Oliver Queen" },
-      { name: "Bruce Wayne" }, { name: "Clara Oswald" }, { name: "John Watson" }
-    ];
-
-    const geographics = [
-      { city: "New York", region: "Manhattan", country: "USA" },
-      { city: "New York", region: "Brooklyn", country: "USA" },
-      { city: "London", region: "Kensington", country: "UK" },
-      { city: "London", region: "Soho", country: "UK" },
-      { city: "Paris", region: "Montmartre", country: "France" },
-      { city: "Tokyo", region: "Shibuya", country: "Japan" }
-    ];
-
-    const mockFeedback: FeedbackItem[] = [];
-    const mockEvents: EventLog[] = [];
-    const now = new Date();
-
-    // Generate feedback spread over last 90 days
-    for (let i = 0; i < 90; i++) {
-      const daysAgo = i;
-      const createdDate = new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000 - Math.random() * 12 * 60 * 60 * 1000);
-      
-      // Generate 1 to 4 reviews per day
-      const dailyCount = Math.floor(Math.random() * 4) + 1;
-      for (let d = 0; d < dailyCount; d++) {
-        const commentObj = mockComments[Math.floor(Math.random() * mockComments.length)];
-        const staffObj = mockStaff[Math.floor(Math.random() * mockStaff.length)];
-        const branchObj = mockBranches.find(b => b.id === staffObj.branch_id) || mockBranches[0];
-        const custObj = customers[Math.floor(Math.random() * customers.length)];
-        const cohort = cohorts[Math.floor(Math.random() * cohorts.length)];
-        const geo = geographics[Math.floor(Math.random() * geographics.length)];
-        
-        mockFeedback.push({
-          id: `sb-fb-${i}-${d}`,
-          rating: commentObj.rating,
-          comments: commentObj.text,
-          category: commentObj.category,
-          sentiment: commentObj.sentiment,
-          priority: commentObj.rating <= 2 ? "High" : commentObj.rating === 3 ? "Medium" : "Low",
-          branch_id: branchObj.id,
-          branch_name: branchObj.name,
-          staff_id: staffObj.id,
-          staff_name: staffObj.name,
-          customer_name: custObj.name,
-          customer_cohort: cohort,
-          city: geo.city,
-          region: geo.region,
-          country: geo.country,
-          created_at: createdDate.toISOString()
-        });
-
-        // Associated event log entries for live stream
-        if (d === 0) {
-          mockEvents.push({
-            id: `sb-ev-fb-${i}`,
-            event_type: "feedback_submitted",
-            metadata: { rating: commentObj.rating, branch: branchObj.name, category: commentObj.category },
-            created_at: createdDate.toISOString(),
-            actor: custObj.name,
-            status: "Success",
-            affected_resource: "Feedback Inbox"
-          });
-        }
-      }
-
-      // Add analytics funnel scans, link opens, clicks
-      const scansDaily = Math.floor(Math.random() * 12) + 6;
-      for (let s = 0; s < scansDaily; s++) {
-        const qr = mockQrs[Math.floor(Math.random() * mockQrs.length)];
-        const eventTime = new Date(createdDate.getTime() - Math.random() * 8 * 60 * 60 * 1000);
-        
-        mockEvents.push({
-          id: `sb-ev-scan-${i}-${s}`,
-          event_type: "qr_scan",
-          metadata: { qr_id: qr.id, target: qr.name, branch_id: qr.branch_id },
-          created_at: eventTime.toISOString(),
-          actor: "Guest Customer",
-          status: "Success",
-          affected_resource: qr.name
-        });
-
-        mockEvents.push({
-          id: `sb-ev-open-${i}-${s}`,
-          event_type: "page_open",
-          metadata: { source: "QR", device: Math.random() > 0.35 ? "Mobile" : "Desktop" },
-          created_at: new Date(eventTime.getTime() + 2000).toISOString(),
-          actor: "Guest Customer",
-          status: "Success",
-          affected_resource: "Funnel Landing"
-        });
-
-        if (Math.random() > 0.4) {
-          mockEvents.push({
-            id: `sb-ev-click-${i}-${s}`,
-            event_type: "review_click",
-            metadata: { platform: "Google" },
-            created_at: new Date(eventTime.getTime() + 15000).toISOString(),
-            actor: "Guest Customer",
-            status: "Success",
-            affected_resource: "Google Review Link"
-          });
-        }
-      }
-    }
-
-    // Add static system audits into events for variety
-    mockEvents.push({
-      id: "sb-ev-system-1",
-      event_type: "Staff Added",
-      metadata: { name: "Chloe Young", role: "Receptionist" },
-      created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      actor: "Owner",
-      status: "Success",
-      affected_resource: "Staff Roster"
-    });
-    mockEvents.push({
-      id: "sb-ev-system-2",
-      event_type: "Campaign Completed",
-      metadata: { name: "Summer Loyalty Blast", type: "WhatsApp" },
-      created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-      actor: "Campaign Engine",
-      status: "Completed",
-      affected_resource: "WhatsApp API Client"
-    });
-
-    return {
-      branches: mockBranches,
-      staff: mockStaff,
-      campaigns: mockCampaigns,
-      qrs: mockQrs,
-      feedback: mockFeedback,
-      events: mockEvents
-    };
-  }, []);
-
   // Choose between Sandbox or Real Database
-  const activeBranches = demoMode ? sandboxData.branches : dbBranches;
-  const activeStaff = demoMode ? sandboxData.staff : dbStaff;
-  const activeCampaigns = demoMode ? sandboxData.campaigns : dbCampaigns;
-  const activeQrs = demoMode ? sandboxData.qrs : dbQrs;
-  const activeFeedback = demoMode ? sandboxData.feedback : dbFeedback;
-  const activeEvents = demoMode ? sandboxData.events : dbEvents;
+  const activeBranches = dbBranches;
+  const activeStaff = dbStaff;
+  const activeCampaigns = dbCampaigns;
+  const activeQrs = dbQrs;
+  const activeFeedback = dbFeedback;
+  const activeEvents = dbEvents;
 
   // Filter Helper: Checks if item is in selected date range
   const isInDateRange = (dateStr: string, range: string, start?: string, end?: string) => {
@@ -1147,23 +955,6 @@ export default function PerformanceAnalyticsPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5">
-            {/* Sandbox Mode Toggle */}
-            <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm">
-              <Shield className={`h-4 w-4 ${demoMode ? "text-emerald-500 fill-current" : "text-slate-400"}`} />
-              <span>Sandbox Demo Data</span>
-              <button
-                type="button"
-                onClick={() => {
-                  setDemoMode(!demoMode);
-                  triggerToast(demoMode ? "Switched to live database context." : "Switched to high-fidelity mock sandbox.");
-                }}
-                className={`w-8 h-4 rounded-full transition relative shrink-0 ${demoMode ? "bg-emerald-500" : "bg-slate-200 dark:bg-slate-800"}`}
-              >
-                <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-transform ${demoMode ? "translate-x-4" : "translate-x-1"}`} />
-              </button>
-            </div>
-          </div>
         </header>
 
         {/* Tab Controls */}

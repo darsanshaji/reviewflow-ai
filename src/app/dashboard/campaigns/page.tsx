@@ -68,7 +68,6 @@ export default function CampaignsManagerPage() {
   const [selectedStatus, setSelectedStatus] = useState("All");
   const [selectedTag, setSelectedTag] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
-  const [demoMode, setDemoMode] = useState<boolean>(false);
 
   // Form State
   const [campaignName, setCampaignName] = useState("");
@@ -198,10 +197,7 @@ export default function CampaignsManagerPage() {
             };
           });
           setDbCampaigns(records);
-          if (records.length === 0) {
-            setDemoMode(true);
-            triggerToast("Entering Sandbox Demo Mode: Loaded rich campaign templates.");
-          } else {
+          if (records.length > 0) {
             setActiveCampaignDetail(records[0].id);
           }
         }
@@ -215,141 +211,8 @@ export default function CampaignsManagerPage() {
     loadCampaignsData();
   }, [router, supabase]);
 
-  // Construct High-fidelity Sandbox Mock Data
-  const sandboxData = useMemo(() => {
-    const mockCampaigns: CampaignRecord[] = [
-      {
-        id: "sb-c1",
-        name: "Summer Loyalty Blast",
-        type: "WhatsApp",
-        status: "Sent",
-        schedule_time: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString(),
-        template_body: "Hi {{customer_name}},\n\nThank you for visiting {{business_name}}! We would love to hear your feedback. Please take 30 seconds to rate your experience: {{review_link}}\n\nBest regards,\nTeam {{business_name}}",
-        business_id: "sb-b1",
-        tag: "VIP",
-        audience: "VIP Customers",
-        sent_count: 550,
-        opened_count: 512,
-        response_count: 242,
-        conversion_count: 184,
-        revenue_impact: 2200,
-        approval_status: "Approved",
-        approver: "Marcus Aurelius (Manager)",
-        approved_at: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString(),
-        created_at: new Date(Date.now() - 36 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: "sb-c2",
-        name: "Post-Service Auto SMS",
-        type: "SMS",
-        status: "Sent",
-        schedule_time: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
-        template_body: "Hello {{customer_name}}, thanks for visiting us today! Mind writing a quick review on how {{staff_name}} did? Click here: {{review_link}}",
-        business_id: "sb-b1",
-        tag: "Automation",
-        audience: "New Customers",
-        sent_count: 940,
-        opened_count: 910,
-        response_count: 382,
-        conversion_count: 218,
-        revenue_impact: 1840,
-        approval_status: "Approved",
-        approver: "Marcus Aurelius (Manager)",
-        approved_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
-        created_at: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: "sb-c3",
-        name: "Feedback Email campaign",
-        type: "Email",
-        status: "Sent",
-        schedule_time: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-        template_body: "Dear {{customer_name}},\n\nIt was a pleasure serving you at {{business_name}}. We strive for excellence and appreciate your feedback.\n\nReview link: {{review_link}}\n\nWarm regards,\n{{business_name}} Management",
-        business_id: "sb-b1",
-        tag: "Loyalty",
-        audience: "Returning Customers",
-        sent_count: 220,
-        opened_count: 140,
-        response_count: 85,
-        conversion_count: 62,
-        revenue_impact: 720,
-        approval_status: "Approved",
-        approver: "Marcus Aurelius (Manager)",
-        approved_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-        created_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: "sb-c4",
-        name: "Spring Re-engagement Promo",
-        type: "WhatsApp",
-        status: "Paused",
-        schedule_time: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
-        template_body: "Hey {{customer_name}}! We haven't seen you in a while at {{business_name}}. Write a review about your last visit and get 15% off: {{review_link}}",
-        business_id: "sb-b1",
-        tag: "Promotion",
-        audience: "Inactive Customers",
-        sent_count: 0,
-        opened_count: 0,
-        response_count: 0,
-        conversion_count: 0,
-        revenue_impact: 0,
-        approval_status: "Pending",
-        created_at: new Date().toISOString()
-      },
-      {
-        id: "sb-c5",
-        name: "Negative Experience Recovery",
-        type: "WhatsApp",
-        status: "Sent",
-        schedule_time: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
-        template_body: "Hi {{customer_name}},\n\nWe noticed your recent rating was lower than expected. We apologize for the friction and would like to make it right. Please reply with details so we can resolve this.",
-        business_id: "sb-b1",
-        tag: "Recovery",
-        audience: "Customers With Negative Feedback",
-        sent_count: 48,
-        opened_count: 46,
-        response_count: 42,
-        conversion_count: 24,
-        revenue_impact: 0,
-        approval_status: "Approved",
-        approver: "Marcus Aurelius (Manager)",
-        approved_at: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
-        created_at: new Date(Date.now() - 13 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: "sb-c6",
-        name: "Automated Birthday Wish",
-        type: "WhatsApp",
-        status: "Scheduled",
-        schedule_time: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-        template_body: "Happy Birthday {{customer_name}}! 🎉 Celebrate with us at {{business_name}} and take 10% off your service. Don't forget to write a review: {{review_link}}",
-        business_id: "sb-b1",
-        tag: "Automation",
-        audience: "VIP Customers",
-        sent_count: 0,
-        opened_count: 0,
-        response_count: 0,
-        conversion_count: 0,
-        revenue_impact: 0,
-        approval_status: "Approved",
-        approver: "System Scheduler",
-        approved_at: new Date().toISOString(),
-        created_at: new Date().toISOString()
-      }
-    ];
-
-    const mockActivities: ActivityLog[] = [
-      { id: "act-1", timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), user: "Emma Watson (Manager)", action: "Edited Template", campaign: "Summer Loyalty Blast", status: "Success" },
-      { id: "act-2", timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(), user: "Marcus Aurelius (Owner)", action: "Approved Campaign", campaign: "Post-Service Auto SMS", status: "Success" },
-      { id: "act-3", timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), user: "Emma Watson (Manager)", action: "Paused Automation", campaign: "Spring Re-engagement Promo", status: "Success" },
-      { id: "act-4", timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), user: "System Scheduler", action: "Triggered Dispatch", campaign: "Feedback Email campaign", status: "Completed" }
-    ];
-
-    return { campaigns: mockCampaigns, activities: mockActivities };
-  }, []);
-
-  const activeCampaignsList = demoMode ? sandboxData.campaigns : dbCampaigns;
-  const activeActivities = demoMode ? sandboxData.activities : [];
+  const activeCampaignsList = dbCampaigns;
+  const activeActivities: ActivityLog[] = [];
 
   // Set initial selected details
   useEffect(() => {
@@ -496,7 +359,7 @@ export default function CampaignsManagerPage() {
         created_at: new Date().toISOString()
       };
 
-      if (!demoMode && tenantId) {
+      if (tenantId) {
         const { error } = await supabase
           .from("campaigns")
           .insert({
@@ -529,14 +392,12 @@ export default function CampaignsManagerPage() {
 
   const handleSendNow = async (id: string) => {
     try {
-      if (!demoMode) {
-        const { error } = await supabase
-          .from("campaigns")
-          .update({ status: "Sent", schedule_time: new Date().toISOString() })
-          .eq("id", id);
+      const { error } = await supabase
+        .from("campaigns")
+        .update({ status: "Sent", schedule_time: new Date().toISOString() })
+        .eq("id", id);
 
-        if (error) throw error;
-      }
+      if (error) throw error;
 
       setDbCampaigns(
         activeCampaignsList.map((c) => (c.id === id ? { ...c, status: "Sent", schedule_time: new Date().toISOString(), sent_count: 320, opened_count: 280, response_count: 120, conversion_count: 82 } : c))
@@ -582,13 +443,11 @@ export default function CampaignsManagerPage() {
     if (!confirm("Are you sure you want to delete this campaign?")) return;
 
     try {
-      if (!demoMode) {
-        const { error } = await supabase
-          .from("campaigns")
-          .delete()
-          .eq("id", id);
-        if (error) throw error;
-      }
+      const { error } = await supabase
+        .from("campaigns")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
       setDbCampaigns(activeCampaignsList.filter((c) => c.id !== id));
       triggerToast("Campaign deleted successfully.");
     } catch (err) {
@@ -670,22 +529,6 @@ export default function CampaignsManagerPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5">
-            <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm">
-              <Shield className={`h-4 w-4 ${demoMode ? "text-emerald-500 fill-current" : "text-slate-400"}`} />
-              <span>Sandbox Demo Data</span>
-              <button
-                type="button"
-                onClick={() => {
-                  setDemoMode(!demoMode);
-                  triggerToast(demoMode ? "Switched to live campaign schema." : "Loaded multi-channel automation mockups.");
-                }}
-                className={`w-8 h-4 rounded-full transition relative shrink-0 ${demoMode ? "bg-emerald-500" : "bg-slate-200 dark:bg-slate-800"}`}
-              >
-                <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-transform ${demoMode ? "translate-x-4" : "translate-x-1"}`} />
-              </button>
-            </div>
-          </div>
         </header>
 
         {errorMsg && (

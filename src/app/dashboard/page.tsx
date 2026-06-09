@@ -71,8 +71,6 @@ export default function DashboardOverviewPage() {
   const [qrScans, setQrScans] = useState(0);
   const [recentFeedback, setRecentFeedback] = useState<FeedbackRecord[]>([]);
 
-  // Demo / Seed Mode
-  const [isDemoMode, setIsDemoMode] = useState(false);
 
   // 15 upgraded Dashboard Section States
   // KPI Section
@@ -131,42 +129,6 @@ export default function DashboardOverviewPage() {
   const [requestTargetPhone, setRequestTargetPhone] = useState("");
   const [requestTargetName, setRequestTargetName] = useState("");
 
-  // Seed simulated data when DB collections are empty
-  const applySimulatedDataset = (tenantId: string) => {
-    setIsDemoMode(true);
-    setTotalFeedback(154);
-    setAvgRating(4.7);
-    setCampaignsSent(840);
-    setReviewsGenerated(296);
-    setQrScans(1420);
-    setFunnelConversions(520);
-    setUnresolvedComplaints(2);
-    setHighPriorityComplaints(1);
-    setActiveCampaignsCount(3);
-
-    // Mock feedback roster
-    const mockFeedbacks: FeedbackRecord[] = [
-      { id: "FB-01", rating: 5, comments: "Stylist Sarah was absolutely amazing! Incredible haircut.", category: "Staff", sentiment: "Positive", created_at: new Date().toISOString(), status: "Resolved", customers: { name: "Alice Watson" }, staff: { name: "Sarah Stylist" }, branches: { name: "Central Branch" } },
-      { id: "FB-02", rating: 2, comments: "Waited 25 minutes past my slot appointment time. Disappointed.", category: "Waiting Time", sentiment: "Negative", created_at: new Date(Date.now() - 3600000).toISOString(), status: "Open", customers: { name: "Jane Guest" }, staff: { name: "John Stylist" }, branches: { name: "North Branch" } },
-      { id: "FB-03", rating: 4, comments: "Clean salon, professional customer service, good pricing.", category: "Quality", sentiment: "Positive", created_at: new Date(Date.now() - 7200000).toISOString(), status: "Resolved", customers: { name: "Robert Miller" }, staff: { name: "Sarah Stylist" }, branches: { name: "Central Branch" } },
-      { id: "FB-04", rating: 5, comments: "Very friendly receptionist, prompt service. Highly recommended.", category: "Staff", sentiment: "Positive", created_at: new Date(Date.now() - 86400000).toISOString(), status: "Resolved", customers: { name: "Sophia Davis" }, staff: { name: "Emily Stylist" }, branches: { name: "Central Branch" } },
-      { id: "FB-05", rating: 3, comments: "Average service. Pricing was higher than what was shown online.", category: "Price", sentiment: "Neutral", created_at: new Date(Date.now() - 172800000).toISOString(), status: "In-Progress", customers: { name: "Michael Carter" }, staff: { name: "John Stylist" }, branches: { name: "North Branch" } }
-    ];
-    setRecentFeedback(mockFeedbacks);
-
-    // Mock rankings
-    setStaffRankings([
-      { ranking: 1, name: "Sarah Stylist", rating: 4.9, feedbackCount: 45, conversions: 38, rate: 84 },
-      { ranking: 2, name: "Emily Stylist", rating: 4.8, feedbackCount: 38, conversions: 30, rate: 78 },
-      { ranking: 3, name: "John Stylist", rating: 4.1, feedbackCount: 29, conversions: 18, rate: 62 },
-      { ranking: 4, name: "David Reception", rating: 4.5, feedbackCount: 15, conversions: 12, rate: 80 }
-    ]);
-
-    setBranchPerformance([
-      { ranking: 1, name: "Central Branch", rating: 4.8, feedbackCount: 95, rate: 82, topStaff: "Sarah Stylist" },
-      { ranking: 2, name: "North Branch", rating: 4.2, feedbackCount: 59, rate: 68, topStaff: "John Stylist" }
-    ]);
-  };
 
   useEffect(() => {
     async function loadDashboardData() {
@@ -279,14 +241,6 @@ export default function DashboardOverviewPage() {
           .select("id, name")
           .eq("tenant_id", tenantId);
 
-        // If no data exists in database, apply sandbox dataset automatically for WOW factor
-        if ((!feedback || feedback.length === 0) && (!events || events.length === 0)) {
-          applySimulatedDataset(tenantId);
-          setLoading(false);
-          return;
-        }
-
-        setIsDemoMode(false);
         setCampaignsSent(campaignsCount || 0);
         setActiveCampaignsCount(activeCampaigns || 0);
 
@@ -544,12 +498,6 @@ export default function DashboardOverviewPage() {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            {isDemoMode && (
-              <span className="text-[10px] font-extrabold bg-blue-50 border border-blue-200 text-blue-700 px-3 py-1.5 rounded-lg dark:bg-blue-950/20 dark:border-blue-900/50 dark:text-blue-400 flex items-center gap-1">
-                <Info className="h-3.5 w-3.5" />
-                Demo Sandbox Active
-              </span>
-            )}
             <button
               onClick={() => setShowRequestModal(true)}
               className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-xs transition shadow-sm"
