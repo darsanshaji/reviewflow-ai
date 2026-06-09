@@ -51,7 +51,7 @@ export default function Sidebar({ tenantName, roleName, userRoleId }: SidebarPro
 
   const navItems = [
     { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-    { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
+    { href: "/dashboard/analytics", label: "Performance Analytics", icon: BarChart3 },
     { href: "/dashboard/campaigns", label: "Campaigns", icon: MessageSquare },
     { href: "/dashboard/qrs", label: "QR Generator", icon: QrCode },
     { href: "/dashboard/staff", label: "Staff Performance", icon: Users },
