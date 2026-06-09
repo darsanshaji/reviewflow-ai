@@ -67,23 +67,41 @@ export default function TeamManagementPage() {
         .eq("id", session.user.id)
         .single()) as any;
 
-      if (!profile?.tenant_id) {
+      let tenantIdVal = profile?.tenant_id;
+      let tenantNameVal = profile?.tenants?.name || "My Business";
+      let roleNameVal = profile?.roles?.name || "Staff";
+      let userRoleIdVal = profile?.role_id;
+
+      if (typeof window !== "undefined") {
+        const impId = sessionStorage.getItem("impersonate_tenant_id");
+        const impName = sessionStorage.getItem("impersonate_tenant_name");
+        if (impId && impName) {
+          tenantIdVal = impId;
+          tenantNameVal = impName;
+          roleNameVal = "Owner (Impersonated)";
+          userRoleIdVal = 2;
+        }
+      }
+
+      if (!tenantIdVal) {
         setErrorMsg("Tenant organization context missing.");
         setLoading(false);
         return;
       }
 
-      setTenantId(profile.tenant_id);
-      setUserRoleId(profile.role_id);
-      setTenantName(profile.tenants?.name || "My Business");
-      setRoleName(profile.roles?.name || "Staff");
+      setTenantId(tenantIdVal);
+      setUserRoleId(userRoleIdVal);
+      setTenantName(tenantNameVal);
+      setRoleName(roleNameVal);
 
       // Verify Permissions: Only Owner (2) and Super Admin (1) can manage team
-      if (profile.role_id !== 1 && profile.role_id !== 2) {
+      if (userRoleIdVal !== 1 && userRoleIdVal !== 2) {
         setErrorMsg("Access Denied: Only Business Owners can access team management.");
         setLoading(false);
         return;
       }
+
+      const activeTenantId = tenantIdVal;
 
       // 1. Fetch active members
       const { data: membersData } = await supabase
@@ -94,7 +112,7 @@ export default function TeamManagementPage() {
           role_id,
           roles ( name )
         `)
-        .eq("tenant_id", profile.tenant_id)
+        .eq("tenant_id", activeTenantId)
         .order("name", { ascending: true });
 
       if (membersData) setMembers(membersData as any);
@@ -103,7 +121,7 @@ export default function TeamManagementPage() {
       const { data: invitesData } = await supabase
         .from("invitations")
         .select("*")
-        .eq("tenant_id", profile.tenant_id)
+        .eq("tenant_id", activeTenantId)
         .eq("status", "pending")
         .order("created_at", { ascending: false });
 

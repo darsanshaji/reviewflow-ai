@@ -50,6 +50,7 @@ export default function QRManagerPage() {
   const [analyticsData, setAnalyticsData] = useState<Record<string, { scans: number; conversions: number; avgRating: number }>>({});
 
   // Context Context
+  const [tenantId, setTenantId] = useState<string | null>(null);
   const [tenantName, setTenantName] = useState("My Business");
   const [roleName, setRoleName] = useState("Staff");
   const [userRole, setUserRole] = useState<number | null>(null);
@@ -70,17 +71,34 @@ export default function QRManagerPage() {
           .eq("id", session.user.id)
           .single()) as any;
 
-        if (!profile?.tenant_id) {
+        let tenantIdVal = profile?.tenant_id;
+        let tenantNameVal = profile?.tenants?.name || "My Business";
+        let roleNameVal = profile?.roles?.name || "Staff";
+        let userRoleIdVal = profile?.role_id;
+
+        if (typeof window !== "undefined") {
+          const impId = sessionStorage.getItem("impersonate_tenant_id");
+          const impName = sessionStorage.getItem("impersonate_tenant_name");
+          if (impId && impName) {
+            tenantIdVal = impId;
+            tenantNameVal = impName;
+            roleNameVal = "Owner (Impersonated)";
+            userRoleIdVal = 2;
+          }
+        }
+
+        if (!tenantIdVal) {
           setErrorMsg("Account tenant profile not found.");
           setLoading(false);
           return;
         }
 
-        setTenantName(profile.tenants?.name || "My Business");
-        setRoleName(profile.roles?.name || "Staff");
-        setUserRole(profile.role_id);
+        setTenantId(tenantIdVal);
+        setTenantName(tenantNameVal);
+        setRoleName(roleNameVal);
+        setUserRole(userRoleIdVal);
 
-        const tenantId = profile.tenant_id;
+        const tenantId = tenantIdVal;
 
         // Fetch Branches
         const { data: branchData } = await supabase
@@ -199,15 +217,14 @@ export default function QRManagerPage() {
     setErrorMsg("");
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const { data: profile } = await supabase
-        .from("users")
-        .select("tenant_id")
-        .eq("id", session?.user.id || "")
-        .single();
-
-      const tenantId = profile?.tenant_id;
-      if (!tenantId) throw new Error("No active tenant context.");
+      let activeTenantId = tenantId;
+      if (typeof window !== "undefined") {
+        const impId = sessionStorage.getItem("impersonate_tenant_id");
+        if (impId) {
+          activeTenantId = impId;
+        }
+      }
+      if (!activeTenantId) throw new Error("No active tenant context.");
 
       // Establish target identifiers
       let targetIdVal = "General Reception";
@@ -234,7 +251,7 @@ export default function QRManagerPage() {
         .from("qr_codes")
         .insert({
           id: tempId,
-          tenant_id: tenantId,
+          tenant_id: activeTenantId,
           branch_id: selectedBranch,
           staff_id: staffIdVal,
           service_id: serviceIdVal,

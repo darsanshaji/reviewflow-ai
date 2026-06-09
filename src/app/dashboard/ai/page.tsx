@@ -201,18 +201,34 @@ export default function AIInsightsPage() {
           .eq("id", session.user.id)
           .single()) as any;
 
-        if (!profile?.tenant_id) {
+        let tenantIdVal = profile?.tenant_id;
+        let tenantNameVal = profile?.tenants?.name || "My Business";
+        let roleNameVal = profile?.roles?.name || "Staff";
+        let userRoleIdVal = profile?.role_id;
+
+        if (typeof window !== "undefined") {
+          const impId = sessionStorage.getItem("impersonate_tenant_id");
+          const impName = sessionStorage.getItem("impersonate_tenant_name");
+          if (impId && impName) {
+            tenantIdVal = impId;
+            tenantNameVal = impName;
+            roleNameVal = "Owner (Impersonated)";
+            userRoleIdVal = 2;
+          }
+        }
+
+        if (!tenantIdVal) {
           setErrorMsg("Tenant profile context missing.");
           setLoading(false);
           return;
         }
 
-        setTenantId(profile.tenant_id);
-        setTenantName(profile.tenants?.name || "My Business");
-        setRoleName(profile.roles?.name || "Staff");
-        setUserRoleId(profile.role_id);
+        setTenantId(tenantIdVal);
+        setTenantName(tenantNameVal);
+        setRoleName(roleNameVal);
+        setUserRoleId(userRoleIdVal);
 
-        const tenantId = profile.tenant_id;
+        const tenantId = tenantIdVal;
 
         // Fetch Feedback comment text
         const { data: feedbackData } = await supabase

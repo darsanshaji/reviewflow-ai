@@ -69,11 +69,25 @@ export default function StaffManagerPage() {
 
         if (profileErr || !profile) throw profileErr || new Error("Profile context not found");
 
-        setUserRole(profile.role_id);
-        setTenantId(profile.tenant_id);
-        setTenantName(profile.tenants?.name || "My Business");
+        let tenantIdVal = profile?.tenant_id;
+        let tenantNameVal = profile?.tenants?.name || "My Business";
+        let userRoleIdVal = profile?.role_id;
 
-        const activeTenantId = profile.tenant_id;
+        if (typeof window !== "undefined") {
+          const impId = sessionStorage.getItem("impersonate_tenant_id");
+          const impName = sessionStorage.getItem("impersonate_tenant_name");
+          if (impId && impName) {
+            tenantIdVal = impId;
+            tenantNameVal = impName;
+            userRoleIdVal = 2; // Impersonated Owner
+          }
+        }
+
+        setUserRole(userRoleIdVal);
+        setTenantId(tenantIdVal);
+        setTenantName(tenantNameVal);
+
+        const activeTenantId = tenantIdVal;
 
         // Fetch Branches
         const { data: branchData } = await supabase

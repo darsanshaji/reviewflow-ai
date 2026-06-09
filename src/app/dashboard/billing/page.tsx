@@ -77,18 +77,34 @@ export default function BillingPage() {
           .eq("id", session.user.id)
           .single()) as any;
 
-        if (!profile?.tenant_id) {
+        let tenantIdVal = profile?.tenant_id;
+        let tenantNameVal = profile?.tenants?.name || "My Business";
+        let roleNameVal = profile?.roles?.name || "Staff";
+        let userRoleIdVal = profile?.role_id;
+
+        if (typeof window !== "undefined") {
+          const impId = sessionStorage.getItem("impersonate_tenant_id");
+          const impName = sessionStorage.getItem("impersonate_tenant_name");
+          if (impId && impName) {
+            tenantIdVal = impId;
+            tenantNameVal = impName;
+            roleNameVal = "Owner (Impersonated)";
+            userRoleIdVal = 2;
+          }
+        }
+
+        if (!tenantIdVal) {
           setErrorMsg("Tenant profile context missing.");
           setLoading(false);
           return;
         }
 
-        setTenantId(profile.tenant_id);
-        setUserRole(profile.role_id);
-        setTenantName(profile.tenants?.name || "My Business");
-        setRoleName(profile.roles?.name || "Staff");
+        setTenantId(tenantIdVal);
+        setUserRole(userRoleIdVal);
+        setTenantName(tenantNameVal);
+        setRoleName(roleNameVal);
 
-        const activeTenantId = profile.tenant_id;
+        const activeTenantId = tenantIdVal;
 
         // Fetch counts for usage bars
         const { count: bCount } = await supabase.from("branches").select("*", { count: "exact", head: true }).eq("tenant_id", activeTenantId);

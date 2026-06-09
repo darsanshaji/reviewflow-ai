@@ -63,17 +63,31 @@ export default function AnalyticsDashboardPage() {
           .eq("id", session.user.id)
           .single()) as any;
 
-        if (!profile?.tenant_id) {
+        let tenantId = profile?.tenant_id;
+        let tenantNameVal = profile?.tenants?.name || "My Business";
+        let roleNameVal = profile?.roles?.name || "Staff";
+        let userRoleIdVal = profile?.role_id;
+
+        if (typeof window !== "undefined") {
+          const impId = sessionStorage.getItem("impersonate_tenant_id");
+          const impName = sessionStorage.getItem("impersonate_tenant_name");
+          if (impId && impName) {
+            tenantId = impId;
+            tenantNameVal = impName;
+            roleNameVal = "Owner (Impersonated)";
+            userRoleIdVal = 2;
+          }
+        }
+
+        if (!tenantId) {
           setErrorMsg("Tenant profile context missing.");
           setLoading(false);
           return;
         }
 
-        setTenantName(profile.tenants?.name || "My Business");
-        setRoleName(profile.roles?.name || "Staff");
-        setUserRoleId(profile.role_id);
-
-        const tenantId = profile.tenant_id;
+        setTenantName(tenantNameVal);
+        setRoleName(roleNameVal);
+        setUserRoleId(userRoleIdVal);
 
         // 1. Fetch raw campaigns, feedback, events, and staff
         const { data: campaigns } = await supabase

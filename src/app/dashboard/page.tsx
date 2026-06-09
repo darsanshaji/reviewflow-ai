@@ -138,11 +138,29 @@ export default function DashboardOverviewPage() {
         }
         // ---------------------------------------------
 
-        setProfile(userProfile);
-        setTenantName(userProfile.tenants?.name || "My Business");
-        setRoleName(userProfile.roles?.name || "Staff");
+        let tenantId = userProfile.tenant_id;
+        let tenantNameVal = userProfile.tenants?.name || "My Business";
+        let roleNameVal = userProfile.roles?.name || "Staff";
+        let userRoleIdVal = userProfile.role_id;
 
-        const tenantId = userProfile.tenant_id;
+        if (typeof window !== "undefined") {
+          const impId = sessionStorage.getItem("impersonate_tenant_id");
+          const impName = sessionStorage.getItem("impersonate_tenant_name");
+          if (impId && impName) {
+            tenantId = impId;
+            tenantNameVal = impName;
+            roleNameVal = "Owner (Impersonated)";
+            userRoleIdVal = 2;
+          }
+        }
+
+        setProfile({
+          ...userProfile,
+          tenant_id: tenantId,
+          role_id: userRoleIdVal
+        });
+        setTenantName(tenantNameVal);
+        setRoleName(roleNameVal);
 
         // Log access audit log event
         try {

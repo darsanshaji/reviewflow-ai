@@ -21,6 +21,28 @@ export default function Sidebar({ tenantName, roleName, userRoleId }: SidebarPro
   const router = useRouter();
   const supabase = createClient();
 
+  const [isImpersonating, setIsImpersonating] = React.useState(false);
+  const [impName, setImpName] = React.useState("");
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const impId = sessionStorage.getItem("impersonate_tenant_id");
+      const name = sessionStorage.getItem("impersonate_tenant_name");
+      if (impId && name) {
+        setIsImpersonating(true);
+        setImpName(name);
+      }
+    }
+  }, []);
+
+  const handleExitImpersonation = () => {
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("impersonate_tenant_id");
+      sessionStorage.removeItem("impersonate_tenant_name");
+      window.location.href = "/dashboard/super-admin";
+    }
+  };
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     router.push("/login");
@@ -43,6 +65,23 @@ export default function Sidebar({ tenantName, roleName, userRoleId }: SidebarPro
 
   return (
     <aside className="w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col justify-between shrink-0 h-screen">
+      
+      {isImpersonating && (
+        <div className="bg-yellow-500 text-slate-950 px-4 py-2 text-xs font-extrabold flex flex-col gap-1 border-b border-yellow-600 shrink-0">
+          <div className="flex items-center gap-1.5">
+            <span className="animate-pulse">⚠️</span>
+            <span>Impersonating {impName}</span>
+          </div>
+          <button
+            type="button"
+            onClick={handleExitImpersonation}
+            className="w-full mt-1 py-1 bg-slate-950 hover:bg-slate-900 text-white font-bold rounded text-[10px] uppercase tracking-wider transition"
+          >
+            Exit Impersonation
+          </button>
+        </div>
+      )}
+
       <div className="flex-1 overflow-y-auto">
         <div className="h-16 px-6 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2 font-bold text-lg text-blue-600 dark:text-blue-400">
           <Star className="h-5 w-5 fill-current" />
