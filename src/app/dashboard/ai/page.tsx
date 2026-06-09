@@ -33,14 +33,14 @@ export default function AIInsightsPage() {
   const [userRoleId, setUserRoleId] = useState<number | null>(null);
 
   // AI Sentiment States
-  const [sentimentRatios, setSentimentRatios] = useState({ positive: 80, neutral: 12, negative: 8 });
+  const [sentimentRatios, setSentimentRatios] = useState({ positive: 0, neutral: 0, negative: 0 });
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({
-    "Staff": 5,
-    "Quality": 8,
-    "Price": 2,
-    "Cleanliness": 6,
-    "Waiting Time": 4,
-    "Facilities": 1
+    "Staff": 0,
+    "Quality": 0,
+    "Price": 0,
+    "Cleanliness": 0,
+    "Waiting Time": 0,
+    "Facilities": 0
   });
 
   const [alerts, setAlerts] = useState<InsightAlert[]>([]);
@@ -80,33 +80,16 @@ export default function AIInsightsPage() {
     let qualityPraises = 0;
 
     if (feedbacks.length === 0) {
-      // Set sandbox default metrics to show a beautiful page
-      setSentimentRatios({ positive: 75, neutral: 15, negative: 10 });
+      setSentimentRatios({ positive: 0, neutral: 0, negative: 0 });
       setCategoryCounts({
-        "Staff": 4,
-        "Quality": 7,
-        "Price": 2,
-        "Cleanliness": 5,
-        "Waiting Time": 3,
-        "Facilities": 1
+        "Staff": 0,
+        "Quality": 0,
+        "Price": 0,
+        "Cleanliness": 0,
+        "Waiting Time": 0,
+        "Facilities": 0
       });
-      setAlerts([
-        {
-          type: "warning",
-          title: "Waiting Time Complaints Increased",
-          description: "We detected 3 complaints mentioning delays or waiting times in recent feedback. Suggest scheduling additional staff during peak hours."
-        },
-        {
-          type: "success",
-          title: "Service Quality Improved",
-          description: "Positive sentiment regarding service quality has increased by 15% this week. Great performance by your core stylists!"
-        },
-        {
-          type: "info",
-          title: "Staff Performance Insights",
-          description: "Stylist John has generated 8 positive public Google Reviews, indicating high customer alignment. Consider sharing best practices."
-        }
-      ]);
+      setAlerts([]);
       setAnalyzing(false);
       return;
     }
@@ -311,27 +294,35 @@ export default function AIInsightsPage() {
             <TrendingUp className="h-4 w-4" /> AI Trend Alerts & Insights
           </h2>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {alerts.map((alert, idx) => (
-              <div 
-                key={idx} 
-                className={`p-4 border rounded-xl flex gap-3 shadow-sm ${
-                  alert.type === 'warning' ? 'bg-red-50/50 border-red-200 dark:bg-red-950/10 dark:border-red-900' :
-                  alert.type === 'success' ? 'bg-green-50/50 border-green-200 dark:bg-green-950/10 dark:border-green-900' :
-                  'bg-blue-50/50 border-blue-200 dark:bg-blue-950/10 dark:border-blue-900'
-                }`}
-              >
-                {alert.type === 'warning' && <AlertTriangle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />}
-                {alert.type === 'success' && <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />}
-                {alert.type === 'info' && <Brain className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />}
+          {alerts.length === 0 ? (
+            <div className="w-full p-8 border border-dashed rounded-xl text-center bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400">
+              <Brain className="h-8 w-8 mx-auto mb-2 text-slate-350 dark:text-slate-700" />
+              <p className="text-xs font-semibold text-slate-500">No feedback data collected yet to generate trend alerts.</p>
+              <p className="text-[10px] text-slate-400 mt-1">AI trend tracking requires incoming customer feedback comments.</p>
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {alerts.map((alert, idx) => (
+                <div 
+                  key={idx} 
+                  className={`p-4 border rounded-xl flex gap-3 shadow-sm ${
+                    alert.type === 'warning' ? 'bg-red-50/50 border-red-200 dark:bg-red-950/10 dark:border-red-900' :
+                    alert.type === 'success' ? 'bg-green-50/50 border-green-200 dark:bg-green-950/10 dark:border-green-900' :
+                    'bg-blue-50/50 border-blue-200 dark:bg-blue-950/10 dark:border-blue-900'
+                  }`}
+                >
+                  {alert.type === 'warning' && <AlertTriangle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />}
+                  {alert.type === 'success' && <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />}
+                  {alert.type === 'info' && <Brain className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />}
 
-                <div>
-                  <h4 className="font-bold text-xs">{alert.title}</h4>
-                  <p className="text-[11px] text-slate-500 mt-1">{alert.description}</p>
+                  <div>
+                    <h4 className="font-bold text-xs">{alert.title}</h4>
+                    <p className="text-[11px] text-slate-500 mt-1">{alert.description}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* SENTIMENT BREAKDOWN & CATEGORIES RATIOS */}
